@@ -36,9 +36,10 @@ export function DeviceCard({ device, onToggle, isLoading = false }: DeviceCardPr
     }
   };
 
-  const formatLastSeen = (date: Date) => {
+  const formatLastSeen = (date: Date | string) => {
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const lastSeenDate = typeof date === 'string' ? new Date(date) : date;
+    const diffMs = now.getTime() - lastSeenDate.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     
     if (diffMins < 1) return 'Just now';

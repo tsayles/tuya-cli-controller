@@ -24,7 +24,8 @@ function App() {
     try {
       const result = await tuyaAPI.discoverDevices();
       setDevices(result.devices);
-      setLastScan(result.timestamp.toISOString());
+      const timestamp = typeof result.timestamp === 'string' ? result.timestamp : result.timestamp.toISOString();
+      setLastScan(timestamp);
       
       toast.success(`Found ${result.devices.length} device${result.devices.length !== 1 ? 's' : ''}`);
     } catch (err) {

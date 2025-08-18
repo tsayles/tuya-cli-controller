@@ -6,12 +6,12 @@ export interface TuyaDevice {
   isOn: boolean;
   ip?: string;
   model?: string;
-  lastSeen: Date;
+  lastSeen: Date | string;
 }
 
 export interface DeviceDiscoveryResult {
   devices: TuyaDevice[];
-  timestamp: Date;
+  timestamp: Date | string;
 }
 
 export interface DeviceControlRequest {
