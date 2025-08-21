@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Main application service
+  tuya-controller:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tuya-controller.rule=Host(`tuya.localhost`)"
+      - "traefik.http.services.tuya-controller.loadbalancer.server.port=80"
+
+  # Development service (alternative to production build)
+  tuya-controller-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    profiles:
+      - dev
+    command: npm run dev
+
+  # Optional: Reverse proxy for multiple services
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8080:8080"  # Traefik dashboard
+      - "80:80"      # Web traffic
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    profiles:
+      - proxy
+
+# Optional: Create named volumes for persistence
+volumes:
+  node_modules:
+
+# Optional: Create custom network
+networks:
+  tuya-network:
+    driver: bridge
