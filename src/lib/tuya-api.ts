@@ -111,10 +111,19 @@ class TuyaAPIService {
   }
 
   async getDeviceStatus(deviceId: string): Promise<TuyaDevice | null> {
-    await this.simulateNetworkDelay(100, 300);
+    await this.simulateNetworkDelay(500, 1200);
     
     const device = this.devices.get(deviceId);
-    return device ? { ...device } : null;
+    if (!device) return null;
+
+    // Simulate a chance for offline devices to come back online during status check
+    if (!device.isOnline && Math.random() < 0.3) {
+      device.isOnline = true;
+      device.lastSeen = new Date();
+      this.devices.set(deviceId, device);
+    }
+    
+    return { ...device };
   }
 
   private async simulateNetworkDelay(minMs: number, maxMs: number): Promise<void> {

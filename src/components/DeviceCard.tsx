@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 interface DeviceCardProps {
   device: TuyaDevice;
   onToggle: (deviceId: string, turnOn: boolean) => Promise<void>;
+  onRetry?: (deviceId: string) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -21,8 +22,9 @@ const deviceIcons = {
   other: Power
 };
 
-export function DeviceCard({ device, onToggle, isLoading = false }: DeviceCardProps) {
+export function DeviceCard({ device, onToggle, onRetry, isLoading = false }: DeviceCardProps) {
   const [isToggling, setIsToggling] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const IconComponent = deviceIcons[device.type];
 
   const handleToggle = async () => {
@@ -33,6 +35,17 @@ export function DeviceCard({ device, onToggle, isLoading = false }: DeviceCardPr
       await onToggle(device.id, !device.isOn);
     } finally {
       setIsToggling(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!onRetry || isRetrying) return;
+    
+    setIsRetrying(true);
+    try {
+      await onRetry(device.id);
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -111,10 +124,18 @@ export function DeviceCard({ device, onToggle, isLoading = false }: DeviceCardPr
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.reload()}
+                onClick={handleRetry}
+                disabled={isRetrying || isLoading}
                 className="text-xs"
               >
-                Retry
+                {isRetrying ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-2 border-current border-t-transparent mr-1" />
+                    Retrying...
+                  </>
+                ) : (
+                  'Retry'
+                )}
               </Button>
             )}
           </div>

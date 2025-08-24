@@ -86,6 +86,33 @@ function App() {
     }
   };
 
+  const handleDeviceRetry = async (deviceId: string) => {
+    try {
+      // Attempt to get device status to check if it's back online
+      const result = await tuyaAPI.getDeviceStatus(deviceId);
+      
+      if (result) {
+        setDevices(currentDevices => 
+          currentDevices.map(device => 
+            device.id === deviceId 
+              ? { ...device, ...result }
+              : device
+          )
+        );
+        
+        if (result.isOnline) {
+          toast.success('Device is back online');
+        } else {
+          toast.error('Device is still offline');
+        }
+      } else {
+        toast.error('Could not connect to device');
+      }
+    } catch (err) {
+      toast.error('Failed to retry device connection');
+    }
+  };
+
   useEffect(() => {
     if (devices.length === 0) {
       scanForDevices();
@@ -255,6 +282,7 @@ function App() {
                 key={device.id}
                 device={device}
                 onToggle={handleDeviceToggle}
+                onRetry={handleDeviceRetry}
                 isLoading={isScanning}
               />
             ))}
